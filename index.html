@@ -652,6 +652,16 @@ function noiseBuffer() {
   }
   return A.noise;
 }
+// 7 s of noise that plays straight through (a short looped buffer would tick)
+function longNoise() {
+  const c = A.ctx;
+  if (!A.longNoise || A.longNoise.sampleRate !== c.sampleRate) {
+    const len = Math.floor(c.sampleRate * 7), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    A.longNoise = b;
+  }
+  return A.longNoise;
+}
 function noiseBurst(t, dur, freq, level, q = 1.5) {
   const c = A.ctx;
   const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
@@ -697,49 +707,50 @@ function ringStrike(t, len = 3, level = 0.6) {
   nodes.push(tone(t, { freq: 180, peak: level * 0.35, attack: 0.001, decay: 0.06 }));
   return nodes;
 }
-// A slow swell: for the gong's shimmer, which blooms after the hit
-function swell(t, freq, peak, rise, fall) {
+// One gong partial: fades in over `rise` seconds, then dies away over `t60`
+function partial(t, freq, amp, rise, t60) {
   const c = A.ctx, o = c.createOscillator(), g = c.createGain();
   o.frequency.setValueAtTime(freq, t);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.linearRampToValueAtTime(peak, t + rise);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + rise + fall);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(amp, t + rise);
+  g.gain.setTargetAtTime(0, t + rise, t60 / 6.9);   // -60 dB after t60 seconds
   o.connect(g); g.connect(A.bus);
-  o.start(t); o.stop(t + rise + fall + 0.05);
+  o.start(t); o.stop(t + rise + t60);
   return o;
 }
-// Large gong (tam-tam): a low hit that drops slightly in pitch, then a wash of
-// higher partials and noise that swells in and dies away over several seconds
-function gong(t, level = 0.62) {
-  const c = A.ctx, nodes = [];
-  const o = c.createOscillator(), g = c.createGain();
-  o.frequency.setValueAtTime(131, t);
-  o.frequency.exponentialRampToValueAtTime(116, t + 3);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(level, t + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 8);
-  o.connect(g); g.connect(A.bus); o.start(t); o.stop(t + 8.1);
-  nodes.push(o);
-  nodes.push(tone(t, { freq: 247, peak: level * 0.55, attack: 0.008, decay: 6 }));
-  nodes.push(tone(t, { freq: 371, peak: level * 0.42, attack: 0.01, decay: 5 }));
-  const bloom = [[541, 0.34, 0.35, 5.6], [611, 0.26, 0.5, 5.3], [733, 0.3, 0.6, 5], [862, 0.24, 0.75, 4.7], [979, 0.2, 0.9, 4.4],
-                 [1147, 0.17, 1.0, 4.1], [1353, 0.14, 1.1, 3.8], [1621, 0.11, 1.2, 3.4], [1968, 0.08, 1.3, 3], [2437, 0.06, 1.4, 2.6]];
-  for (const [f, a, rise, fall] of bloom) {
-    nodes.push(swell(t, f, level * a, rise, fall));
-    nodes.push(swell(t, f * 1.006, level * a * 0.6, rise * 1.1, fall));
-  }
-  // metallic wash
+// Match-end gong, modelled on the one used at the Olympic judo events:
+// a deep, soft gong that blooms in and hangs in the air. Its tones were
+// measured from the broadcast (strongest at 330, 183 and 267 Hz); close
+// pairs like 183/198 Hz beat against each other for the gong's shimmer.
+function gong(t, level = 0.5) {
+  // [Hz, dB, rise s, T60 s]: dense, uneven tones fill 80 Hz-3 kHz like a tam-tam
+  const P = [
+    [82, -14.0, 0.02, 9.0], [86, -14.0, 0.02, 9.0], [94, -16.5, 0.03, 9.0], [106, -18.0, 0.03, 8.9], [118, -19.0, 0.03, 8.9], [120, -19.0, 0.03, 8.9],
+    [144, -13.0, 0.04, 8.8], [172, -13.0, 0.05, 8.7], [183, -5.3, 0.06, 8.7], [198, -5.3, 0.06, 8.6], [213, -6.8, 0.07, 8.6], [248, -10.8, 0.08, 8.5],
+    [265, -10.8, 0.09, 8.4], [267, -9.3, 0.09, 8.4], [301, -7.8, 0.1, 8.3], [303, -7.8, 0.1, 8.3], [330, -6.3, 0.11, 8.2], [361, -3.3, 0.12, 8.1],
+    [380, -4.8, 0.13, 8.1], [396, -4.8, 0.13, 8.0], [500, -8.8, 0.17, 7.8], [505, -8.8, 0.17, 7.8], [545, -7.3, 0.19, 7.7], [623, -6.3, 0.22, 7.5],
+    [637, -6.3, 0.22, 7.5], [692, -7.8, 0.24, 7.3], [820, -9.8, 0.29, 7.0], [847, -9.8, 0.3, 7.0], [878, -9.8, 0.31, 6.9], [932, -10.8, 0.33, 6.8],
+    [943, -10.8, 0.33, 6.8], [1023, -10.8, 0.35, 6.6], [1136, -8.8, 0.37, 6.3], [1365, -7.3, 0.4, 5.8], [1393, -7.3, 0.4, 5.7], [1451, -8.8, 0.41, 5.6],
+    [1548, -7.3, 0.42, 5.5], [1735, -7.3, 0.44, 5.3], [1968, -10.3, 0.47, 5.0], [1986, -11.8, 0.47, 5.0], [2006, -11.8, 0.48, 5.0], [2507, -21.8, 0.54, 4.5],
+    [2565, -21.8, 0.55, 4.4], [2709, -21.8, 0.56, 4.3], [2842, -20.8, 0.58, 4.2], [2991, -20.8, 0.6, 4.0], [3148, -20.8, 0.6, 4.0],
+  ];
+  // a fraction of a hertz off each tone, so they never all line up (which ticks once a second)
+  const nodes = P.map(([f, db, rise, t60], i) => partial(t, f + ((i * 0.618034) % 1) - 0.5, level * 0.36 * Math.pow(10, db / 20), rise, t60));
+  // soft mallet: a padded thump, no click
+  const c = A.ctx, th = c.createBufferSource(), lp = c.createBiquadFilter(), tg = c.createGain();
+  th.buffer = noiseBuffer(); lp.type = 'lowpass'; lp.frequency.value = 260;
+  tg.gain.setValueAtTime(0.0001, t); tg.gain.exponentialRampToValueAtTime(level * 1.1, t + 0.012);
+  tg.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+  th.connect(lp); lp.connect(tg); tg.connect(A.bus); th.start(t); th.stop(t + 0.25);
+  nodes.push(th);
+  // a quiet metallic breath under the tones
   const s = c.createBufferSource(), bp = c.createBiquadFilter(), ng = c.createGain();
-  s.buffer = noiseBuffer(); s.loop = true;
-  bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 0.9;
-  ng.gain.setValueAtTime(0.0001, t);
-  ng.gain.linearRampToValueAtTime(level * 0.16, t + 0.7);
-  ng.gain.exponentialRampToValueAtTime(0.0001, t + 4.8);
-  s.connect(bp); bp.connect(ng); ng.connect(A.bus);
-  s.start(t); s.stop(t + 4.9);
+  s.buffer = longNoise();
+  bp.type = 'bandpass'; bp.frequency.value = 700; bp.Q.value = 0.6;
+  ng.gain.setValueAtTime(0, t); ng.gain.linearRampToValueAtTime(level * 0.07, t + 0.5);
+  ng.gain.setTargetAtTime(0, t + 0.5, 1.1);
+  s.connect(bp); bp.connect(ng); ng.connect(A.bus); s.start(t); s.stop(t + 7);
   nodes.push(s);
-  // soft mallet thud
-  nodes.push(noiseBurst(t, 0.09, 220, level * 1.2, 0.8));
   return nodes;
 }
 // Wooden clapper: two hardwood sticks struck together, like the timekeeper's
@@ -772,7 +783,7 @@ const SOUNDS = {
   gong:    t => gong(t),
   buzzer:  t => buzzer(t),
   clapper: t => [0, 0.17, 0.34].flatMap((d, i) => clack(t + d, 0.9, i === 1 ? 1.04 : 1)),
-  knock:   t => [0, 0.2, 0.4].flatMap(d => knock(t + d)),
+  knock:   t => [0, 0.34, 0.68].flatMap(d => knock(t + d)),   // knock ... knock ... knock
   clip:    t => {
     const b = activeClip(); if (!b) return [];
     const src = A.ctx.createBufferSource(); src.buffer = b; src.connect(A.bus); src.start(t);
@@ -1619,7 +1630,7 @@ function renderSetup() {
 
 /* Preview of the end-of-round pattern */
 const previewBtn = $('#preview');
-const SOUND_TAIL = { gong: 7, ring: 4, ring3: 4.8, triple: 2.4 };
+const SOUND_TAIL = { gong: 8.5, ring: 4, ring3: 4.8, triple: 2.4 };
 let previewNodes = [], previewTimer = 0;
 const previewSpan = () => (snd.warnAt > 0 ? snd.warnAt : Math.max(snd.pips, 1));
 const previewLabel = () => `Hear the last ${previewSpan()} seconds`;
