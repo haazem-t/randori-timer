@@ -110,10 +110,6 @@ button{cursor:pointer;touch-action:manipulation}
 .panel summary .end{display:flex;align-items:center;gap:12px;flex:none}
 .chev{width:22px;height:22px;flex:none;transition:transform .2s}
 .panel[open] .chev{transform:rotate(180deg)}
-.panel .presets{margin-top:14px}
-.dots{display:flex;gap:4px}
-.dots i{width:14px;height:14px;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
-.note{margin:12px 0 0;color:var(--muted);font-size:14px}
 .row.off{opacity:.4;pointer-events:none}
 
 .text-input{
@@ -122,46 +118,29 @@ button{cursor:pointer;touch-action:manipulation}
 }
 .text-input:focus{outline:none;border-bottom-color:var(--kinari)}
 
-/* colour tiles: each one previews the timer in that phase */
-.tile{
-  width:min(196px,48vw);height:52px;border-radius:12px;border:1.5px solid rgba(255,255,255,.16);
-  display:flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;
-  font-size:15px;font-weight:800;font-stretch:118%;letter-spacing:.14em;
-}
-.tile svg{width:12px;height:12px;opacity:.8}
-
-.sheet{
-  border:0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));
-  width:100%;max-width:520px;margin:auto auto 0;border-radius:20px 20px 0 0;
-  background:#172552;color:var(--kinari);
-}
-.sheet::backdrop{background:rgba(4,8,22,.62)}
-.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
-.sheet h2{margin:0;font-size:20px;font-weight:650}
-.sheet .btn-ghost{min-height:44px;padding:0 18px}
-.swatches{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.row.stack{grid-template-columns:1fr;gap:10px}
+.swatches{display:grid;grid-template-columns:repeat(7,minmax(0,50px));gap:8px}
 .sw{
-  aspect-ratio:1;width:100%;border-radius:12px;border:1.5px solid rgba(255,255,255,.14);padding:0;
-  display:grid;place-items:center;
+  position:relative;aspect-ratio:1;width:100%;border-radius:12px;border:1.5px solid rgba(255,255,255,.16);
+  padding:0;display:grid;place-items:center;cursor:pointer;
 }
-.sw svg{width:22px;height:22px;display:none}
-.sw[aria-pressed="true"]{outline:3px solid var(--kinari);outline-offset:2px}
-.sw[aria-pressed="true"] svg{display:block}
-.custom-color{display:flex;align-items:center;gap:12px;margin-top:16px;font-weight:600;cursor:pointer}
-.custom-color input{
-  -webkit-appearance:none;appearance:none;width:52px;height:52px;border:1.5px solid var(--line);
-  border-radius:12px;padding:0;background:none;cursor:pointer;
-}
-.custom-color input::-webkit-color-swatch-wrapper{padding:0}
-.custom-color input::-webkit-color-swatch{border:0;border-radius:10px}
-.custom-color input::-moz-color-swatch{border:0;border-radius:10px}
-@media (min-width:600px){ .sheet{margin:auto;border-radius:20px} }
+.sw svg{width:22px;height:22px;display:none;position:relative;pointer-events:none}
+.sw[aria-pressed="true"],.sw.custom.on{outline:3px solid var(--kinari);outline-offset:2px}
+.sw[aria-pressed="true"] svg,.sw.custom.on svg{display:block}
+.sw.custom{background:conic-gradient(from 200deg,#FF1744,#FFD600,#00C853,#00B8D4,#2979FF,#7C4DFF,#FF4081,#FF1744)}
+.sw.custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+.sw.custom:focus-within{outline:3px solid var(--hinoki);outline-offset:2px}
+.group{margin:30px 0 0;font-size:15px;font-weight:650;color:var(--hinoki)}
+.rec-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.rec-actions .btn-ghost{min-height:46px;padding:0 16px}
+.btn-ghost.recording{background:var(--shu);border-color:var(--shu);color:#fff}
+#nosleep{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;pointer-events:none;z-index:-1}
 
 .pick{display:flex;align-items:center;gap:6px}
 select{
   appearance:none;-webkit-appearance:none;font-size:16px;font-weight:550;
   background:var(--fill) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23EDE6D6' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center/11px;
-  border:1px solid var(--line);border-radius:10px;padding:11px 34px 11px 12px;min-width:138px;
+  border:1px solid var(--line);border-radius:10px;padding:11px 34px 11px 12px;min-width:138px;max-width:min(200px,46vw);
 }
 select option{background:#fff;color:#111}
 .test{
@@ -323,77 +302,79 @@ input[type=range]{width:min(190px,44vw);accent-color:var(--kinari)}
     </div>
   </header>
 
-  <div class="presets" id="presets" role="group" aria-label="Presets"></div>
+  <div class="presets" id="presets" role="group" aria-label="Timers"></div>
 
-  <section class="fields" aria-label="Session">
-    <div class="row">
-      <label class="lab" for="f-name">Activity</label>
-      <input class="name-input" id="f-name" maxlength="18" autocomplete="off" spellcheck="false" enterkeyhint="done">
-    </div>
+  <section class="fields" aria-label="Timer">
+    <div class="row" data-stepper="work" data-label="Round time"></div>
+    <div class="row" data-stepper="rest" data-label="Rest time"></div>
     <div class="row" data-stepper="rounds" data-label="Rounds"></div>
-    <div class="row" data-stepper="work" data-label="Round length"></div>
-    <div class="row" data-stepper="rest" data-label="Rest" data-hint="Between rounds"></div>
-    <div class="row" data-stepper="prep" data-label="Get ready" data-hint="Before round 1"></div>
+    <div class="row stack" data-colors="work" data-label="Round color"></div>
+    <div class="row stack" data-colors="rest" data-label="Rest color"></div>
+    <div class="row" data-pick="roundSound" data-label="Round sound" data-hint="Start and end of rounds"></div>
   </section>
 
-  <details class="panel" id="sounds">
+  <details class="panel" id="more">
     <summary>
-      <span><span class="t">Sounds and warnings</span><small id="pattern"></small></span>
+      <span><span class="t">More settings</span><small>Get ready, 10-second warning, voice, volume</small></span>
       <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </summary>
+
+    <div class="row">
+      <label class="lab" for="f-name">Timer name</label>
+      <input class="name-input" id="f-name" maxlength="18" autocomplete="off" spellcheck="false" enterkeyhint="done">
+    </div>
+    <div class="row" data-stepper="prep" data-label="Get ready" data-hint="Countdown before round 1"></div>
+
+    <h3 class="group">Warnings</h3>
     <div class="row" data-stepper="warnAt" data-label="Warning" data-hint="Time left when it sounds"></div>
     <div class="row" data-pick="warnSound" data-label="Warning sound"></div>
     <div class="row" data-stepper="pips" data-label="Countdown beeps" data-hint=""></div>
-    <div class="row" data-pick="startSound" data-label="Round start" data-hint="When get-ready or rest ends"></div>
-    <div class="row" data-pick="endSound" data-label="Round end"></div>
+    <div class="row" data-pick="endSound" data-label="End of round"></div>
     <div class="row">
-      <label class="lab" for="s-warnInRest">Warnings during rest<span class="hint">Bell and beeps before the next round starts</span></label>
+      <label class="lab" for="s-warnInRest">Warnings during rest<span class="hint">Before the next round starts</span></label>
       <input type="checkbox" class="switch" id="s-warnInRest" role="switch">
     </div>
+
+    <h3 class="group">Voice</h3>
+    <div class="row">
+      <label class="lab" for="s-voiceOn">Call out before each round<span class="hint">During get-ready and rest</span></label>
+      <input type="checkbox" class="switch" id="s-voiceOn" role="switch">
+    </div>
+    <div class="row voice-dep" data-stepper="voiceAt" data-label="When" data-hint="Seconds before the round starts"></div>
+    <div class="row stack voice-dep">
+      <span class="lab">Your own call<span class="hint" id="rec-hint"></span></span>
+      <div class="rec-actions">
+        <button type="button" class="btn-ghost" id="rec-btn">Record</button>
+        <button type="button" class="test" id="rec-play" aria-label="Play the call" hidden></button>
+        <button type="button" class="btn-ghost" id="rec-save" hidden>Save as file</button>
+        <button type="button" class="btn-ghost" id="rec-del" hidden>Delete</button>
+      </div>
+    </div>
+    <div class="row voice-dep tts-dep">
+      <label class="lab" for="s-voiceText">Words<span class="hint">For the device voice</span></label>
+      <input class="text-input" id="s-voiceText" maxlength="30" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="Ready!">
+    </div>
+    <div class="row voice-dep tts-dep">
+      <label class="lab" for="s-voiceName">Device voice</label>
+      <div class="pick"><select id="s-voiceName"><option value="">Automatic</option></select>
+      <button type="button" class="test" id="voice-test" aria-label="Play the device voice"></button></div>
+    </div>
+
+    <h3 class="group">Colors</h3>
+    <div class="row stack" data-colors="prep" data-label="Get ready color"></div>
+    <div class="row stack" data-colors="warn" data-label="Final seconds color"></div>
+    <div class="row">
+      <label class="lab" for="s-redWarn">Use it from the warning<span class="hint">Until the end of each round</span></label>
+      <input type="checkbox" class="switch" id="s-redWarn" role="switch">
+    </div>
+
+    <h3 class="group">Volume</h3>
     <div class="row">
       <label class="lab" for="s-volume">Volume</label>
       <input type="range" id="s-volume" min="0" max="1" step="0.05">
     </div>
     <div class="row row-action">
       <button type="button" class="btn-ghost" id="preview">Hear the last 10 seconds</button>
-    </div>
-  </details>
-
-  <details class="panel" id="voice">
-    <summary>
-      <span><span class="t">Voice</span><small id="voice-sum"></small></span>
-      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </summary>
-    <div class="row">
-      <label class="lab" for="s-voiceOn">Speak before each round<span class="hint">During get-ready and rest</span></label>
-      <input type="checkbox" class="switch" id="s-voiceOn" role="switch">
-    </div>
-    <div class="row voice-dep">
-      <label class="lab" for="s-voiceText">Words</label>
-      <input class="text-input" id="s-voiceText" maxlength="30" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="Ready">
-    </div>
-    <div class="row voice-dep" data-stepper="voiceAt" data-label="When" data-hint="Seconds before the round starts"></div>
-    <div class="row voice-dep">
-      <label class="lab" for="s-voiceName">Voice</label>
-      <div class="pick"><select id="s-voiceName"><option value="">Automatic</option></select>
-      <button type="button" class="test" id="voice-test" aria-label="Play the voice"></button></div>
-    </div>
-    <p class="note" id="voice-note" hidden>This browser can't speak, so the voice cue is off here.</p>
-  </details>
-
-  <details class="panel" id="colors">
-    <summary>
-      <span><span class="t">Colors</span><small id="look-sum"></small></span>
-      <span class="end"><span class="dots" id="look-dots" aria-hidden="true"></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    </summary>
-    <div class="presets" id="themes" role="group" aria-label="Color themes"></div>
-    <div class="row" data-color="prep" data-label="Get ready"></div>
-    <div class="row" data-color="work" data-label="Work"></div>
-    <div class="row" data-color="rest" data-label="Rest"></div>
-    <div class="row" data-color="warn" data-label="Final seconds" data-hint="From the warning to the end of each round"></div>
-    <div class="row">
-      <label class="lab" for="s-redWarn">Change color for the final seconds</label>
-      <input type="checkbox" class="switch" id="s-redWarn" role="switch">
     </div>
   </details>
 
@@ -453,14 +434,10 @@ input[type=range]{width:min(190px,44vw);accent-color:var(--kinari)}
   </div>
 </section>
 
-<dialog class="sheet" id="palette" aria-labelledby="palette-title">
-  <div class="sheet-head">
-    <h2 id="palette-title">Color</h2>
-    <button type="button" class="btn-ghost" id="palette-done">Done</button>
-  </div>
-  <div class="swatches" id="swatches"></div>
-  <label class="custom-color"><input type="color" id="custom-color"><span>Pick any color</span></label>
-</dialog>
+<video id="nosleep" muted playsinline loop preload="auto" aria-hidden="true" tabindex="-1" disablepictureinpicture disableremoteplayback>
+  <source type="video/webm" src="data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQRChYECGFOAZwEAAAAAABHjEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHYTbuMU6uEElTDZ1OsggGETbuMU6uEHFO7a1OsghHN7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsirXsYMPQkBNgI1MYXZmNjAuMTYuMTAwV0GNTGF2ZjYwLjE2LjEwMESJiEC3eAAAAAAAFlSua0CmrgEAAAAAAAA414EBc8WI6OWFLdzqu32cgQAitZyDdW5kiIEAhoVWX1ZQOIOBASPjg4QdzWUA4ImwgUC6gUCagQKuAQAAAAAAAFzXgQJzxYj4uGW3Pzm52JyBACK1nIN1bmSIgQCGhkFfT1BVU1aqg2MuoFa7hATEtACDgQLhkZ+BAbWIQOdwAAAAAABiZIEQY6KTT3B1c0hlYWQBATgBgLsAAAAAABJUw2dA1nNzoGPAgGfImkWjh0VOQ09ERVJEh41MYXZmNjAuMTYuMTAwc3PWY8CLY8WI6OWFLdzqu31nyKFFo4dFTkNPREVSRIeUTGF2YzYwLjMxLjEwMiBsaWJ2cHhnyKFFo4hEVVJBVElPTkSHkzAwOjAwOjA2LjAwMDAwMDAwMABzc9djwItjxYj4uGW3Pzm52GfIokWjh0VOQ09ERVJEh5VMYXZjNjAuMzEuMTAyIGxpYm9wdXNnyKFFo4hEVVJBVElPTkSHkzAwOjAwOjA2LjAwODAwMDAwMAAfQ7Z1TLTngQCji4IAAIAIC+Y7I6tgo6qBAACA8AIAnQEqQABAAABHCIWFiIWEiAICAAZwPEJgCrIg9zAA/v+rUICjioIAFYAICKyzDsajioIAKYAICKyzDsajioIAPYAICKyzDsajioIAUYAICKyzDsajioIAZYAICKyzDsajioIAeYAICKyzDsajioIAjYAICKyzDsajioIAoYAICKyzDsajioIAtYAICKyzDsajioIAyYAICKyzDsajioIA3YAICKyzDsajioIA8YAICKyzDsajioIBBYAICKyzDsajioIBGYAICKyzDsajioIBLYAICKyzDsajioIBQYAICKyzDsajioIBVYAICKyzDsajioIBaYAICKyzDsajioIBfYAICKyzDsajioIBkYAICKyzDsajioIBpYAICKyzDsajioIBuYAICKyzDsajioIBzYAICKyzDsajioIB4YAICKyzDsajioIB9YAICKyzDsajloEB9ADRAQABEBAAGAAYWC/0AAiOgACjioICCYAICKyzDsajioICHYAICKyzDsajioICMYAICKyzDsajioICRYAICKyzDsajioICWYAICKyzDsajioICbYAICKyzDsajioICgYAICKyzDsajioIClYAICKyzDsajioICqYAICKyzDsajioICvYAICKyzDsajioIC0YAICKyzDsajioIC5YAICKyzDsajioIC+YAICKyzDsajioIDDYAICKyzDsajioIDIYAICKyzDsajioIDNYAICKyzDsajioIDSYAICKyzDsajioIDXYAICKyzDsajioIDcYAICKyzDsajioIDhYAICKyzDsajioIDmYAICKyzDsajioIDrYAICKyzDsajioIDwYAICKyzDsajioID1YAICKyzDsajioID6YAICKyzDsajloED6ADRAQABEBAAGAAYWC/0AAiOgACjioID/YAICKyzDsajioIEEYAICKyzDsajioIEJYAICKyzDsajioIEOYAICKyzDsajioIETYAICKyzDsajioIEYYAICKyzDsajioIEdYAICKyzDsajioIEiYAICKyzDsajioIEnYAICKyzDsajioIEsYAICKyzDsajioIExYAICKyzDsajioIE2YAICKyzDsajioIE7YAICKyzDsajioIFAYAICKyzDsajioIFFYAICKyzDsajioIFKYAICKyzDsajioIFPYAICKyzDsajioIFUYAICKyzDsajioIFZYAICKyzDsajioIFeYAICKyzDsajioIFjYAICKyzDsajioIFoYAICKyzDsajioIFtYAICKyzDsajioIFyYAICKyzDsajioIF3YAICKyzDsajloEF3ADRAQABEBAAGAAYWC/0AAiOgACjioIF8YAICKyzDsajioIGBYAICKyzDsajioIGGYAICKyzDsajioIGLYAICKyzDsajioIGQYAICKyzDsajioIGVYAICKyzDsajioIGaYAICKyzDsajioIGfYAICKyzDsajioIGkYAICKyzDsajioIGpYAICKyzDsajioIGuYAICKyzDsajioIGzYAICKyzDsajioIG4YAICKyzDsajioIG9YAICKyzDsajioIHCYAICKyzDsajioIHHYAICKyzDsajioIHMYAICKyzDsajioIHRYAICKyzDsajioIHWYAICKyzDsajioIHbYAICKyzDsajioIHgYAICKyzDsajioIHlYAICKyzDsajioIHqYAICKyzDsajioIHvYAICKyzDsajioIH0YAICKyzDsajloEH0ADRAQABEBAAGAAYWC/0AAiOgACjioIH5YAICKyzDsajioIH+YAICKyzDsajioIIDYAICKyzDsajioIIIYAICKyzDsajioIINYAICKyzDsajioIISYAICKyzDsajioIIXYAICKyzDsajioIIcYAICKyzDsajioIIhYAICKyzDsajioIImYAICKyzDsajioIIrYAICKyzDsajioIIwYAICKyzDsajioII1YAICKyzDsajioII6YAICKyzDsajioII/YAICKyzDsajioIJEYAICKyzDsajioIJJYAICKyzDsajioIJOYAICKyzDsajioIJTYAICKyzDsajioIJYYAICKyzDsajioIJdYAICKyzDsajioIJiYAICKyzDsajioIJnYAICKyzDsajioIJsYAICKyzDsajioIJxYAICKyzDsajloEJxADRAQABEBAAGAAYWC/0AAiOgACjioIJ2YAICKyzDsajioIJ7YAICKyzDsajioIKAYAICKyzDsajioIKFYAICKyzDsajioIKKYAICKyzDsajioIKPYAICKyzDsajioIKUYAICKyzDsajioIKZYAICKyzDsajioIKeYAICKyzDsajioIKjYAICKyzDsajioIKoYAICKyzDsajioIKtYAICKyzDsajioIKyYAICKyzDsajioIK3YAICKyzDsajioIK8YAICKyzDsajioILBYAICKyzDsajioILGYAICKyzDsajioILLYAICKyzDsajioILQYAICKyzDsajioILVYAICKyzDsajioILaYAICKyzDsajioILfYAICKyzDsajioILkYAICKyzDsajioILpYAICKyzDsajioILuYAICKyzDsajloELuADRAQABEBAAGAAYWC/0AAiOgACjioILzYAICKyzDsajioIL4YAICKyzDsajioIL9YAICKyzDsajioIMCYAICKyzDsajioIMHYAICKyzDsajioIMMYAICKyzDsajioIMRYAICKyzDsajioIMWYAICKyzDsajioIMbYAICKyzDsajioIMgYAICKyzDsajioIMlYAICKyzDsajioIMqYAICKyzDsajioIMvYAICKyzDsajioIM0YAICKyzDsajioIM5YAICKyzDsajioIM+YAICKyzDsajioINDYAICKyzDsajioINIYAICKyzDsajioINNYAICKyzDsajioINSYAICKyzDsajioINXYAICKyzDsajioINcYAICKyzDsajioINhYAICKyzDsajioINmYAICKyzDsajioINrYAICKyzDsajloENrADRAQABEBAUYABhYL/QACI6AACjioINwYAICKyzDsajioIN1YAICKyzDsajioIN6YAICKyzDsajioIN/YAICKyzDsajioIOEYAICKyzDsajioIOJYAICKyzDsajioIOOYAICKyzDsajioIOTYAICKyzDsajioIOYYAICKyzDsajioIOdYAICKyzDsajioIOiYAICKyzDsajioIOnYAICKyzDsajioIOsYAICKyzDsajioIOxYAICKyzDsajioIO2YAICKyzDsajioIO7YAICKyzDsajioIPAYAICKyzDsajioIPFYAICKyzDsajioIPKYAICKyzDsajioIPPYAICKyzDsajioIPUYAICKyzDsajioIPZYAICKyzDsajioIPeYAICKyzDsajioIPjYAICKyzDsajioIPoYAICKyzDsajloEPoADRAQABEBAAGAAYWC/0AAiOgACjioIPtYAICKyzDsajioIPyYAICKyzDsajioIP3YAICKyzDsajioIP8YAICKyzDsajioIQBYAICKyzDsajioIQGYAICKyzDsajioIQLYAICKyzDsajioIQQYAICKyzDsajioIQVYAICKyzDsajioIQaYAICKyzDsajioIQfYAICKyzDsajioIQkYAICKyzDsajioIQpYAICKyzDsajioIQuYAICKyzDsajioIQzYAICKyzDsajioIQ4YAICKyzDsajioIQ9YAICKyzDsajioIRCYAICKyzDsajioIRHYAICKyzDsajioIRMYAICKyzDsajioIRRYAICKyzDsajioIRWYAICKyzDsajioIRbYAICKyzDsajioIRgYAICKyzDsajioIRlYAICKyzDsajloERlADRAQABEBAAGAAYWC/0AAiOgACjioIRqYAICKyzDsajioIRvYAICKyzDsajioIR0YAICKyzDsajioIR5YAICKyzDsajioIR+YAICKyzDsajioISDYAICKyzDsajioISIYAICKyzDsajioISNYAICKyzDsajioISSYAICKyzDsajioISXYAICKyzDsajioIScYAICKyzDsajioIShYAICKyzDsajioISmYAICKyzDsajioISrYAICKyzDsajioISwYAICKyzDsajioIS1YAICKyzDsajioIS6YAICKyzDsajioIS/YAICKyzDsajioITEYAICKyzDsajioITJYAICKyzDsajioITOYAICKyzDsajioITTYAICKyzDsajioITYYAICKyzDsYfQ7Z1Qq3nghN1o4qCAACACAissw7Go4qCABSACAissw7Go5aBABMA0QEAARAQABgAGFgv9AAIjoAAo4qCACiACAissw7Go4qCADyACAissw7Go4qCAFCACAissw7Go4qCAGSACAissw7Go4qCAHiACAissw7Go4qCAIyACAissw7Go4qCAKCACAissw7Go4qCALSACAissw7Go4qCAMiACAissw7Go4qCANyACAissw7Go4qCAPCACAissw7Go4qCAQSACAissw7Go4qCARiACAissw7Go4qCASyACAissw7Go4qCAUCACAissw7Go4qCAVSACAissw7Go4qCAWiACAissw7Go4qCAXyACAissw7Go4qCAZCACAissw7Go4qCAaSACAissw7Go4qCAbiACAissw7Go4qCAcyACAissw7Go4qCAeCACAissw7Go4qCAfSACAissw7Go4qCAgiACAissw7Go5aBAgcA0QEAARAQABgAGFgv9AAIjoAAo4qCAhyACAissw7Go4qCAjCACAissw7Go4qCAkSACAissw7Go4qCAliACAissw7Go4qCAmyACAissw7Go4qCAoCACAissw7Go4qCApSACAissw7Go4qCAqiACAissw7Go4qCAryACAissw7Go4qCAtCACAissw7Go4qCAuSACAissw7Go4qCAviACAissw7Go4qCAwyACAissw7Go4qCAyCACAissw7Go4qCAzSACAissw7Go4qCA0iACAissw7Go4qCA1yACAissw7Go4qCA3CACAissw7Go4qCA4SACAissw7Go4qCA5iACAissw7Go4qCA6yACAissw7Go4qCA8CACAissw7Go4qCA9SACAissw7Go4qCA+iACAissw7GoJOhioID/AAICKyzDsZ1ooQAzf5gHFO7a5G7j7OBALeK94EB8YICYPCBEA==">
+  <source type="video/mp4" src="data:video/mp4;base64,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AAAACEGaVAMZzhGAARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHAAAAB0GaYBjOcIwBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHAAAAB0GagBjOcIwBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcAAAAHQZqgGM5wjAEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcAAAAHQZrAGM5wjAEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwAAAAdBmuAYznCMARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwAAAAdBmwAXznCMARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHAAAAB0GbIBfOcIwBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHAAAAB0GbQBfOcIwBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcAAAAHQZtgFc5wjAEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggBwEYIAcBGCAHARggB94CAExhdmM2MC4zMS4xMDIAAjBADgEYIAcBGCAHARggBw==">
+</video>
 
 <noscript><p style="padding:24px">This timer needs JavaScript turned on.</p></noscript>
 
@@ -482,40 +459,34 @@ const BUILTIN = [
 ];
 
 const SOUND_DEFAULTS = {
+  roundSound: 'ring',    // start and end of each round
+  endSound: 'same',      // 'same' = use the round sound
   warnAt: 10,            // seconds left when the warning sounds (0 = off)
-  warnSound: 'bell',
+  warnSound: 'clapper',  // wooden clapper, like the 10-second warning in fights
   pips: 3,               // short beeps on the last N seconds (0 = off)
-  startSound: 'double',  // when get-ready or rest ends
-  endSound: 'buzzer',    // when a round ends
   warnInRest: true,
   redWarn: true,         // switch to the "final seconds" colour from the warning on
   volume: 0.9,
-  voiceOn: true,         // speak before each round (during get-ready and rest)
-  voiceText: 'Ready',
+  voiceOn: true,         // call out before each round (during get-ready and rest)
+  voiceText: 'Ready!',
   voiceAt: 3,            // seconds before the round starts
-  voiceName: '',         // '' = pick automatically
+  voiceName: '',         // device voice; '' = pick automatically
 };
 
 const SOUND_NAMES = {
-  bell: 'Bell', double: 'Double bell', triple: 'Triple bell',
   ring: 'Boxing bell', ring3: 'Boxing bell ×3', gong: 'Gong',
-  buzzer: 'Buzzer', clapper: 'Clappers', beep: 'Beep', none: 'None',
+  clapper: 'Wood clapper', knock: 'Door knock',
+  bell: 'Hand bell', double: 'Double bell', triple: 'Triple bell',
+  buzzer: 'Buzzer', beep: 'Beep', none: 'None',
 };
 
 const BASE_COLOR = '#0E1B3F';
-const THEMES = [
-  { id: 'dojo',     name: 'Dojo',     prep: '#D8B77A', work: '#1D3A8A', rest: '#56692F', warn: '#C23B22' },
-  { id: 'bright',   name: 'Bright',   prep: '#FFD600', work: '#00C853', rest: '#2979FF', warn: '#FF1744' },
-  { id: 'neon',     name: 'Neon',     prep: '#FFEA00', work: '#7C4DFF', rest: '#00E676', warn: '#FF1744' },
-  { id: 'blackout', name: 'Blackout', prep: '#263238', work: '#000000', rest: '#1B2A1F', warn: '#D50000' },
+const DEFAULT_LOOK = { prep: '#D8B77A', work: '#1D3A8A', rest: '#56692F', warn: '#C23B22' };
+const SWATCHES = [
+  ['#1D3A8A', 'Indigo'], ['#2979FF', 'Blue'], ['#00B8D4', 'Cyan'], ['#00C853', 'Green'], ['#56692F', 'Tatami green'],
+  ['#FFD600', 'Yellow'], ['#D8B77A', 'Hinoki'], ['#FF6D00', 'Orange'], ['#FF1744', 'Red'], ['#C23B22', 'Vermilion'],
+  ['#FF4081', 'Pink'], ['#7C4DFF', 'Violet'], ['#000000', 'Black'],
 ];
-const PALETTE = [
-  ['#FF1744', 'Red'], ['#FF6D00', 'Orange'], ['#FFC400', 'Amber'], ['#FFEA00', 'Yellow'], ['#C6FF00', 'Lime'], ['#00E676', 'Green'],
-  ['#00C853', 'Emerald'], ['#1DE9B6', 'Mint'], ['#00E5FF', 'Cyan'], ['#2979FF', 'Blue'], ['#7C4DFF', 'Violet'], ['#D500F9', 'Purple'],
-  ['#FF4081', 'Pink'], ['#F50057', 'Magenta'], ['#C23B22', 'Vermilion'], ['#D8B77A', 'Hinoki'], ['#56692F', 'Tatami'], ['#1D3A8A', 'Indigo'],
-  ['#0E1B3F', 'Navy'], ['#4A148C', 'Plum'], ['#263238', 'Slate'], ['#000000', 'Black'], ['#9E9E9E', 'Grey'], ['#FFFFFF', 'White'],
-];
-const PHASE_LABEL = { prep: 'GET READY', work: 'WORK', rest: 'REST', warn: 'WORK' };
 
 const FIELDS = {
   rounds: { min: 1, max: 99,   kind: 'int',  obj: 'cfg', step: () => 1 },
@@ -545,8 +516,8 @@ function readHash() {
 }
 
 let cfg = Object.assign({}, BUILTIN[0], store.get('cfg', {}), readHash() || {});
-let snd = Object.assign({}, SOUND_DEFAULTS, store.get('snd', {}));
-let look = Object.assign({}, THEMES[0], store.get('look', {}));
+let snd = Object.assign({}, SOUND_DEFAULTS, store.get('snd2', {}));
+let look = Object.assign({}, DEFAULT_LOOK, store.get('look', {}));
 let custom = store.get('presets', []);
 if (!Array.isArray(custom)) custom = [];
 custom = custom.filter(p => p && typeof p.name === 'string');
@@ -565,11 +536,12 @@ function sanitize() {
   snd.voiceText = String(snd.voiceText ?? '').slice(0, 30);
   snd.voiceName = String(snd.voiceName || '');
   for (const k of ['prep', 'work', 'rest', 'warn']) {
-    if (!/^#[0-9a-f]{6}$/i.test(String(look[k]))) look[k] = THEMES[0][k];
+    if (!/^#[0-9a-f]{6}$/i.test(String(look[k]))) look[k] = DEFAULT_LOOK[k];
     look[k] = look[k].toUpperCase();
   }
   look = { prep: look.prep, work: look.work, rest: look.rest, warn: look.warn };
-  for (const k of ['warnSound', 'startSound', 'endSound']) if (!(snd[k] in SOUND_NAMES)) snd[k] = SOUND_DEFAULTS[k];
+  for (const k of ['warnSound', 'roundSound']) if (!(snd[k] in SOUND_NAMES)) snd[k] = SOUND_DEFAULTS[k];
+  if (snd.endSound !== 'same' && !(snd.endSound in SOUND_NAMES)) snd.endSound = 'same';
   snd.warnInRest = !!snd.warnInRest;
   snd.redWarn = !!snd.redWarn;
   snd.volume = Number(snd.volume);
@@ -618,7 +590,6 @@ function phaseStyle(bg) {
   const fg = inkOn(bg);
   return { bg, fg, track: fg === INK ? 'rgba(20,32,63,.22)' : 'rgba(250,247,240,.28)' };
 }
-const themeOf = l => THEMES.find(t => ['prep', 'work', 'rest', 'warn'].every(k => t[k] === l[k]));
 
 /* ================= Audio ================= */
 
@@ -771,12 +742,24 @@ function gong(t, level = 0.62) {
   nodes.push(noiseBurst(t, 0.09, 220, level * 1.2, 0.8));
   return nodes;
 }
-// Hyoshigi-style wooden clappers
-function clack(t) {
+// Wooden clapper: two hardwood sticks struck together, like the timekeeper's
+// 10-second warning in a fight. A sharp, dry crack with a short woody tone.
+function clack(t, level = 0.9, pitch = 1) {
   return [
-    noiseBurst(t, 0.035, 2300, 1.0, 9),
-    tone(t, { freq: 1850, peak: 0.55, attack: 0.001, decay: 0.07 }),
-    tone(t, { freq: 2960, peak: 0.25, attack: 0.001, decay: 0.045 }),
+    noiseBurst(t, 0.02, 2500 * pitch, level * 1.4, 1.3),
+    tone(t, { freq: 1480 * pitch, peak: level * 0.55, attack: 0.0008, decay: 0.1 }),
+    tone(t, { freq: 1910 * pitch, peak: level * 0.42, attack: 0.0008, decay: 0.08 }),
+    tone(t, { freq: 3380 * pitch, peak: level * 0.22, attack: 0.0008, decay: 0.05 }),
+    tone(t, { freq: 640 * pitch, peak: level * 0.32, attack: 0.0008, decay: 0.05 }),
+  ];
+}
+// Knuckles on a wooden door: lower and rounder than the clapper
+function knock(t, level = 0.9) {
+  return [
+    noiseBurst(t, 0.03, 950, level * 1.2, 0.9),
+    tone(t, { freq: 185, peak: level * 0.6, attack: 0.001, decay: 0.13 }),
+    tone(t, { freq: 420, peak: level * 0.7, attack: 0.001, decay: 0.09 }),
+    tone(t, { freq: 780, peak: level * 0.36, attack: 0.001, decay: 0.05 }),
   ];
 }
 
@@ -788,7 +771,13 @@ const SOUNDS = {
   ring3:   t => [0, 0.34, 0.68].flatMap((d, i) => ringStrike(t + d, i === 2 ? 4.2 : 1.1)),
   gong:    t => gong(t),
   buzzer:  t => buzzer(t),
-  clapper: t => [...clack(t), ...clack(t + 0.12)],
+  clapper: t => [0, 0.17, 0.34].flatMap((d, i) => clack(t + d, 0.9, i === 1 ? 1.04 : 1)),
+  knock:   t => [0, 0.2, 0.4].flatMap(d => knock(t + d)),
+  clip:    t => {
+    const b = activeClip(); if (!b) return [];
+    const src = A.ctx.createBufferSource(); src.buffer = b; src.connect(A.bus); src.start(t);
+    return [src];
+  },
   beep:    t => [tone(t, { freq: 1568, type: 'square', peak: 0.3, attack: 0.005, hold: 0.34, decay: 0.08, lowpass: 5000 })],
   pip:     t => [tone(t, { freq: 1319, type: 'square', peak: 0.34, attack: 0.003, hold: 0.07, decay: 0.08, lowpass: 4500 })],
   none:    () => [],
@@ -801,23 +790,106 @@ function playSoundNow(name, offset = 0.03) {
 
 /* ================= Voice ================= */
 
+// 1) A recorded call ("Ready!" in a coach's voice): recorded on this device,
+//    or a ready.wav / ready.mp3 / ready.m4a file next to index.html.
+// 2) Otherwise the device's own speech voice.
+const CLIP = { device: null, site: null, siteName: '' };
+const activeClip = () => CLIP.device || CLIP.site;
+
+const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+function decodeAny(ab) {
+  return new Promise((res, rej) => {
+    const oc = new OAC(1, 1, 44100);
+    const p = oc.decodeAudioData(ab, res, rej);
+    if (p && p.then) p.then(res, rej);
+  });
+}
+function renderOffline(oc) {
+  return new Promise(res => {
+    oc.oncomplete = e => res(e.renderedBuffer);
+    const p = oc.startRendering();
+    if (p && p.then) p.then(res);
+  });
+}
+const toB64 = u8 => { let b = ''; for (let i = 0; i < u8.length; i += 0x8000) b += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(b); };
+const fromB64 = str => Uint8Array.from(atob(str), c => c.charCodeAt(0));
+function wavBytes(x, sr) {
+  const n = x.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const c = Math.max(-1, Math.min(1, x[i])); v.setInt16(44 + i * 2, c < 0 ? c * 0x8000 : c * 0x7fff, true); }
+  return new Uint8Array(buf);
+}
+// Trim the silence around a shout, make it loud and even, and store it small
+async function processClip(ab) {
+  const buf = await decodeAny(ab), sr = buf.sampleRate, n = buf.length, x = new Float32Array(n);
+  for (let c = 0; c < buf.numberOfChannels; c++) { const d = buf.getChannelData(c); for (let i = 0; i < n; i++) x[i] += d[i] / buf.numberOfChannels; }
+  let mean = 0; for (let i = 0; i < n; i++) mean += x[i]; mean /= n || 1;
+  for (let i = 0; i < n; i++) x[i] -= mean;
+  const win = Math.max(1, Math.round(sr * 0.01)), rms = [];
+  for (let i = 0; i < n; i += win) { let q = 0; const e = Math.min(n, i + win); for (let j = i; j < e; j++) q += x[j] * x[j]; rms.push(Math.sqrt(q / (e - i))); }
+  const top = Math.max(0, ...rms);
+  if (top < 0.004) return null;                       // silence
+  const thr = top * 0.12;
+  const a = rms.findIndex(r => r > thr), b = rms.length - 1 - rms.slice().reverse().findIndex(r => r > thr);
+  const start = Math.max(0, a * win - Math.round(sr * 0.015));
+  const end = Math.min(n, (b + 1) * win + Math.round(sr * 0.08), start + sr * 2.5);
+  const y = x.slice(start, end);
+  if (y.length < sr * 0.12) return null;              // too short to be a word
+  let peak = 0; for (let i = 0; i < y.length; i++) peak = Math.max(peak, Math.abs(y[i]));
+  const g = 0.97 / peak, fi = Math.round(sr * 0.004), fo = Math.round(sr * 0.03);
+  for (let i = 0; i < y.length; i++) y[i] *= g * Math.min(1, i / fi, (y.length - 1 - i) / fo);
+  const outSr = 22050, oc = new OAC(1, Math.ceil(y.length * outSr / sr), outSr);
+  const src = oc.createBufferSource(), inb = oc.createBuffer(1, y.length, sr);
+  inb.getChannelData(0).set(y); src.buffer = inb; src.connect(oc.destination); src.start(0);
+  const out = await renderOffline(oc);
+  return { samples: out.getChannelData(0), sr: outSr };
+}
+async function loadClips() {
+  try {
+    const saved = localStorage.getItem('randori.clip');
+    if (saved) CLIP.device = await decodeAny(fromB64(saved).buffer);
+  } catch (e) {}
+  if (location.protocol.startsWith('http')) {
+    for (const f of ['ready.wav', 'ready.mp3', 'ready.m4a']) {
+      try {
+        const r = await fetch(f, { cache: 'no-cache' });
+        if (!r.ok || /text\/html/.test(r.headers.get('content-type') || '')) continue;
+        CLIP.site = await decodeAny(await r.arrayBuffer()); CLIP.siteName = f;
+        break;
+      } catch (e) {}
+    }
+  }
+  if (typeof renderSetup === 'function') try { renderSetup(); } catch (e) {}
+}
+
 const TTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window ? window.speechSynthesis : null;
+// macOS ships joke and robot voices; never pick those
+const NOVELTY = /^(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|pipe organ|superstar|trinoids|whisper|wobble|zarvox|deranged|hysterical|junior|ralph|fred|kathy|princess|grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley)\b/i;
+function voiceScore(v) {
+  let sc = 0;
+  if (/natural|neural|premium|enhanced/i.test(v.name)) sc += 50;
+  if (/^(google us english|google uk english male|microsoft (andrew|brian|guy|christopher|eric|davis|aria|jenny|david|mark)|alex|aaron|evan|nathan|tom|arthur|daniel|samantha|ava|allison|karen|moira)\b/i.test(v.name)) sc += 30;
+  if (/\bmale\b|andrew|brian|guy|christopher|eric|davis|david|mark|alex|aaron|evan|nathan|tom|arthur|daniel/i.test(v.name)) sc += 6;
+  if (/en[-_]US/i.test(v.lang)) sc += 4; else if (/en[-_]GB/i.test(v.lang)) sc += 3;
+  if (v.localService) sc += 2;
+  return sc;
+}
 let voices = [];
 function loadVoices() {
   if (!TTS) return;
-  const all = TTS.getVoices();
+  const all = TTS.getVoices().filter(v => !NOVELTY.test(v.name));
   const en = all.filter(v => /^en([-_]|$)/i.test(v.lang));
-  voices = (en.length ? en : all).slice().sort((a, b) =>
-    (b.localService - a.localService) || a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
+  voices = (en.length ? en : all).slice().sort((a, b) => voiceScore(b) - voiceScore(a) || a.name.localeCompare(b.name));
   if (typeof renderVoices === 'function') renderVoices();
 }
 function pickVoice(o) {
   if (!voices.length) return null;
   if (o.voiceName) { const v = voices.find(x => x.name === o.voiceName); if (v) return v; }
-  // Automatic: a voice on the device (starts fastest), US or UK English first
-  return voices.find(v => v.localService && /en[-_]US/i.test(v.lang))
-      || voices.find(v => v.localService && /en[-_]GB/i.test(v.lang))
-      || voices.find(v => v.localService) || voices.find(v => v.default) || voices[0];
+  return voices[0];
 }
 function speak(text, o = snd) {
   if (!TTS || !text || A.muted) return;
@@ -825,7 +897,7 @@ function speak(text, o = snd) {
     const u = new SpeechSynthesisUtterance(text);
     const v = pickVoice(o);
     if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-US';
-    u.volume = Math.min(1, o.volume * 1.1); u.rate = 1.05;
+    u.volume = Math.min(1, o.volume + 0.1); u.rate = 1.12; u.pitch = 1.08;   // brisk and bright, not sleepy
     TTS.cancel();
     TTS.speak(u);
   } catch (e) {}
@@ -847,8 +919,7 @@ const S = {
   cfg: null, snd: null, lastIdx: -1, lastText: '', startedAt: 0,
 };
 let scheduled = [];     // [{when, nodes}] sounds queued on the audio clock
-let voiceQ = [];        // [{at, text}] words to speak, fired from the timer loop
-const VOICE_LEAD = 150; // ms: speech takes a moment to start
+let voiceQ = [];        // [{at, text}] words for the device voice, fired from the timer loop
 let schedThrough = 0;   // perf-time up to which events have been queued
 const HORIZON = 65000;  // queue sounds ahead so a throttled background tab still rings on time
 window.__events = [];
@@ -866,16 +937,17 @@ function buildSegments(c) {
 // Sounds for one segment, as offsets (s) from its start
 function segEvents(i) {
   const seg = S.segs[i], next = S.segs[i + 1], o = S.snd, D = seg.dur, ev = [];
-  const words = (o.voiceText || '').trim();
-  const voiceAt = o.voiceOn && words && seg.type !== 'work' && next && next.type === 'work' && o.voiceAt < D ? o.voiceAt : 0;
-  if (i === 0 && seg.type === 'work') ev.push({ t: 0, s: o.startSound });
+  const words = (o.voiceText || '').trim() || 'Ready!';
+  const startS = o.roundSound, endS = o.endSound === 'same' ? o.roundSound : o.endSound;
+  const voiceAt = o.voiceOn && seg.type !== 'work' && next && next.type === 'work' && o.voiceAt < D ? o.voiceAt : 0;
+  if (i === 0 && seg.type === 'work') ev.push({ t: 0, s: startS });
   if (voiceAt) ev.push({ t: D - voiceAt, s: 'voice', text: words });
   if (seg.type === 'work' || o.warnInRest) {
     if (o.warnAt > 0 && o.warnAt < D) ev.push({ t: D - o.warnAt, s: o.warnSound });
     // the spoken word replaces the beep on the same second
     for (let k = o.pips; k >= 1; k--) if (k < D && k !== o.warnAt && k !== voiceAt) ev.push({ t: D - k, s: 'pip' });
   }
-  const end = seg.type === 'work' ? o.endSound : (next && next.type === 'work' ? o.startSound : 'none');
+  const end = seg.type === 'work' ? endS : (next && next.type === 'work' ? startS : 'none');
   ev.push({ t: D, s: end, end: true });
   return ev;
 }
@@ -888,7 +960,8 @@ function pump(now) {
     for (const e of segEvents(i)) {
       const at = t0 + e.t * 1000;
       if (at <= schedThrough || at > until || e.s === 'none') continue;
-      if (e.s === 'voice') queueVoice(e.text, at);
+      if (e.s === 'voice' && activeClip()) queueSound('clip', at, now);  // recorded call: exact timing
+      else if (e.s === 'voice') queueVoice(e.text, at);
       else queueSound(e.s, at, now);
     }
     t0 += S.segs[i].dur * 1000;
@@ -897,7 +970,7 @@ function pump(now) {
   if (A.ctx && scheduled.length > 60) scheduled = scheduled.filter(x => x.when > A.ctx.currentTime - 3);
 }
 function queueSound(name, at, now) {
-  if (DEBUG) window.__events.push({ s: name, at, t: +((at - S.startedAt) / 1000).toFixed(3) });
+  if (DEBUG) window.__events.push({ s: name === 'clip' ? 'voice' : name, at, t: +((at - S.startedAt) / 1000).toFixed(3) });
   if (!A.ctx) return;
   const when = A.ctx.currentTime + Math.max(0, (at - now) / 1000);
   scheduled.push({ when, nodes: SOUNDS[name](when) });
@@ -908,7 +981,7 @@ function queueVoice(text, at) {
   voiceQ.sort((a, b) => a.at - b.at);
 }
 function fireVoice(now) {
-  while (voiceQ.length && voiceQ[0].at - VOICE_LEAD <= now) {
+  while (voiceQ.length && voiceQ[0].at - S.voiceLead <= now) {
     const v = voiceQ.shift();
     if (now - v.at < 1500) speak(v.text, S.snd); // skip if the tab was asleep and it's too late
   }
@@ -1085,11 +1158,13 @@ function updateSoundUI() {
 
 function startSession() {
   ensureAudio();
-  if (snd.voiceOn) primeSpeech();
-  lockScreen();
+  if (snd.voiceOn && !activeClip()) primeSpeech();
+  keepAwake();
   S.cfg = Object.assign({}, cfg);
   S.snd = Object.assign({}, snd);
   S.look = Object.assign({}, look);
+  const tv = pickVoice(S.snd);
+  S.voiceLead = tv && !tv.localService ? 450 : 150;  // online voices take longer to start talking
   voiceQ = [];
   S.segs = buildSegments(S.cfg);
   S.idx = 0; S.lastIdx = -1; S.lastText = '';
@@ -1163,7 +1238,7 @@ function back() {
 
 function finish() {
   S.active = false; S.running = false;
-  stopLoop(); unlockScreen(); disarmEnd();
+  stopLoop(); letSleep(); disarmEnd();
   const c = S.cfg;
   $('#done-sum').textContent = `${c.rounds} × ${fmtTime(c.work)} ${c.name}`;
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -1172,7 +1247,7 @@ function finish() {
 function exitSession() {
   S.active = false; S.running = false;
   cancelQueued();
-  stopLoop(); unlockScreen(); disarmEnd();
+  stopLoop(); letSleep(); disarmEnd();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   show('setup');
 }
@@ -1197,10 +1272,21 @@ function poke() {
 // Keep the screen awake while a session runs
 let wake = null;
 async function lockScreen() {
-  if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
-  try { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } catch (e) {}
+  if (wake || !('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+  try {
+    wake = await navigator.wakeLock.request('screen');
+    wake.addEventListener('release', () => { wake = null; if (S.active && document.visibilityState === 'visible') setTimeout(lockScreen, 500); });
+  } catch (e) {}
 }
-function unlockScreen() { try { if (wake) wake.release(); } catch (e) {} wake = null; }
+function unlockScreen() { const w = wake; wake = null; try { if (w) w.release(); } catch (e) {} }
+// Belt and braces: also play a tiny silent video, which keeps screens and
+// laptops awake the same way a playing YouTube video does
+const nosleepEl = $('#nosleep');
+function keepAwake() {
+  lockScreen();
+  try { nosleepEl.muted = true; const p = nosleepEl.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+}
+function letSleep() { unlockScreen(); try { nosleepEl.pause(); } catch (e) {} }
 
 function toggleMute() { A.muted = !A.muted; applyVolume(); updateSoundUI(); }
 function toggleFull() {
@@ -1236,7 +1322,7 @@ document.addEventListener('keydown', e => {
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible' || !S.active) return;
-  lockScreen();
+  keepAwake();
   if (S.running) { ensureAudio(); tick(); requeue(performance.now()); }
 });
 
@@ -1275,12 +1361,12 @@ function renderPresets() {
   }
   if (!active) {
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'chip ghost'; b.textContent = 'Save as preset'; b.dataset.preset = '__save';
+    b.type = 'button'; b.className = 'chip ghost'; b.textContent = 'Save this timer'; b.dataset.preset = '__save';
     b.addEventListener('click', savePreset);
     presetsEl.appendChild(b);
   } else if (!active.builtin) {
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'chip ghost'; b.textContent = 'Delete preset'; b.dataset.preset = '__delete';
+    b.type = 'button'; b.className = 'chip ghost'; b.textContent = 'Delete this timer'; b.dataset.preset = '__delete';
     b.addEventListener('click', () => deletePreset(active.name));
     presetsEl.appendChild(b);
   }
@@ -1296,7 +1382,7 @@ function savePreset() {
   renderSetup();
 }
 function deletePreset(name) {
-  if (!confirm(`Delete the preset “${name}”?`)) return;
+  if (!confirm(`Delete the timer “${name}”?`)) return;
   custom = custom.filter(x => x.name.toLowerCase() !== name.toLowerCase());
   store.set('presets', custom);
   renderSetup();
@@ -1326,7 +1412,7 @@ function fieldText(key) {
   return F.kind === 'time' ? fmtTime(v) : String(v);
 }
 
-function buildRows() {
+function buildSteppers() {
   $$('[data-stepper]').forEach(row => {
     const key = row.dataset.stepper, F = FIELDS[key], label = row.dataset.label;
     const hint = row.dataset.hint !== undefined ? `<span class="hint" id="h-${key}">${row.dataset.hint}</span>` : '';
@@ -1357,23 +1443,143 @@ function buildRows() {
     });
   });
 
+}
+
+/* Sound pickers */
+const resolveSound = key => (key === 'endSound' && snd.endSound === 'same' ? snd.roundSound : snd[key]);
+function buildPicks() {
   $$('[data-pick]').forEach(row => {
     const key = row.dataset.pick, label = row.dataset.label;
     const hint = row.dataset.hint ? `<span class="hint">${row.dataset.hint}</span>` : '';
-    const opts = Object.entries(SOUND_NAMES).map(([k, n]) => `<option value="${k}">${n}</option>`).join('');
+    let opts = Object.entries(SOUND_NAMES).map(([k, n]) => `<option value="${k}">${n}</option>`).join('');
+    if (key === 'endSound') opts = '<option value="same">Same as start</option>' + opts;
     row.innerHTML =
       `<label class="lab" for="s-${key}">${label}${hint}</label>` +
       `<div class="pick"><select id="s-${key}">${opts}</select>` +
-      `<button type="button" class="test" aria-label="Play ${label.toLowerCase()} sound">${ICON.test}</button></div>`;
+      `<button type="button" class="test" aria-label="Play the ${label.toLowerCase()}">${ICON.test}</button></div>`;
     const sel = row.querySelector('select');
-    sel.addEventListener('change', () => { snd[key] = sel.value; changed(); playSoundNow(sel.value); });
-    row.querySelector('.test').addEventListener('click', () => playSoundNow(snd[key]));
+    sel.addEventListener('change', () => { snd[key] = sel.value; changed(); playSoundNow(resolveSound(key)); });
+    row.querySelector('.test').addEventListener('click', () => playSoundNow(resolveSound(key)));
   });
+}
 
+/* Colour swatches */
+const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function setColor(kind, hex) { look[kind] = hex.toUpperCase(); changed(); }
+function buildSwatches() {
+  $$('[data-colors]').forEach(row => {
+    const kind = row.dataset.colors;
+    row.innerHTML = `<span class="lab" id="lab-${kind}">${row.dataset.label}</span>` +
+      `<div class="swatches" role="group" aria-labelledby="lab-${kind}">` +
+      SWATCHES.map(([hex, name]) =>
+        `<button type="button" class="sw" data-hex="${hex}" aria-label="${name}" title="${name}" style="background:${hex};color:${inkOn(hex)}">${CHECK}</button>`).join('') +
+      `<label class="sw custom" title="Any color"><input type="color" aria-label="Pick any color">${CHECK}</label></div>`;
+    row.querySelector('.swatches').addEventListener('click', e => {
+      const b = e.target.closest('button.sw'); if (b) setColor(kind, b.dataset.hex);
+    });
+    const ci = row.querySelector('input[type=color]');
+    ci.addEventListener('input', () => setColor(kind, ci.value));
+  });
+}
+function renderSwatches() {
+  $$('[data-colors]').forEach(row => {
+    const cur = look[row.dataset.colors];
+    let found = false;
+    row.querySelectorAll('button.sw').forEach(b => { const on = b.dataset.hex === cur; found = found || on; b.setAttribute('aria-pressed', String(on)); });
+    const cu = row.querySelector('.custom'), ci = cu.querySelector('input');
+    cu.classList.toggle('on', !found);
+    cu.style.background = found ? '' : cur;
+    cu.style.color = inkOn(cur);
+    if (document.activeElement !== ci) ci.value = cur.toLowerCase();
+  });
+}
+
+/* Voice: recorded call or device voice */
+let rec = null, recMsg = '';
+function renderVoices() {
+  const sel = document.getElementById('s-voiceName');
+  if (!sel) return;
+  const keep = snd.voiceName;
+  sel.innerHTML = '<option value="">Automatic</option>' +
+    voices.map(v => `<option value="${v.name.replace(/"/g, '&quot;')}">${v.name.replace(/</g, '&lt;')}</option>`).join('');
+  sel.value = voices.some(v => v.name === keep) ? keep : '';
+}
+function renderRec() {
+  const has = !!CLIP.device, btn = $('#rec-btn');
+  btn.textContent = rec ? 'Stop' : has ? 'Record again' : 'Record';
+  btn.classList.toggle('recording', !!rec);
+  $('#rec-play').hidden = !activeClip() || !!rec;
+  $('#rec-save').hidden = !has || !!rec;
+  $('#rec-del').hidden = !has || !!rec;
+  $('#rec-hint').textContent = recMsg || (rec ? 'Recording… shout it like you would on the mat'
+    : has ? 'Your recording plays on this device. Save it as a file and add it to your site to use it everywhere.'
+    : CLIP.site ? `Using ${CLIP.siteName} from your site`
+    : 'Record yourself shouting “Ready!” and the timer plays it');
+  $$('.tts-dep').forEach(r => { r.hidden = !!activeClip() || !TTS; });
+}
+async function startRecording() {
+  recMsg = '';
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+    recMsg = 'This browser can’t record. Try Chrome or Safari.'; renderRec(); return;
+  }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); }
+  catch (e) { recMsg = 'The microphone is blocked. Allow it for this site and try again.'; renderRec(); return; }
+  const mr = new MediaRecorder(stream), chunks = [];
+  mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  mr.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    if (rec) clearTimeout(rec.timer);
+    rec = null; renderRec();
+    try {
+      const clip = await processClip(await new Blob(chunks, { type: mr.mimeType || 'audio/webm' }).arrayBuffer());
+      if (!clip) { recMsg = 'Didn’t catch that. Hold the phone closer and shout it again.'; renderRec(); return; }
+      const bytes = wavBytes(clip.samples, clip.sr);
+      try { localStorage.setItem('randori.clip', toB64(bytes)); } catch (e) {}
+      CLIP.device = await decodeAny(bytes.slice().buffer);
+      renderSetup();
+      playSoundNow('clip');
+    } catch (e) { recMsg = 'That recording didn’t work. Try again.'; renderRec(); }
+  };
+  rec = { mr, timer: setTimeout(() => { if (mr.state !== 'inactive') mr.stop(); }, 3000) };
+  mr.start();
+  renderRec();
+}
+function buildVoice() {
+  const on = $('#s-voiceOn'), text = $('#s-voiceText'), sel = $('#s-voiceName');
+  $('#voice-test').innerHTML = ICON.test;
+  $('#rec-play').innerHTML = ICON.test;
+  on.addEventListener('change', () => { snd.voiceOn = on.checked; changed(); });
+  text.addEventListener('input', () => { snd.voiceText = text.value; saveCfg(); });
+  text.addEventListener('change', () => { snd.voiceText = text.value.trim(); changed(); });
+  text.addEventListener('keydown', e => { if (e.key === 'Enter') text.blur(); });
+  sel.addEventListener('change', () => { snd.voiceName = sel.value; changed(); speak(snd.voiceText.trim() || 'Ready!'); });
+  $('#voice-test').addEventListener('click', () => speak(snd.voiceText.trim() || 'Ready!'));
+  $('#rec-btn').addEventListener('click', () => {
+    ensureAudio();
+    if (rec) { if (rec.mr.state !== 'inactive') rec.mr.stop(); } else startRecording();
+  });
+  $('#rec-play').addEventListener('click', () => playSoundNow('clip'));
+  $('#rec-del').addEventListener('click', () => {
+    try { localStorage.removeItem('randori.clip'); } catch (e) {}
+    CLIP.device = null; recMsg = ''; renderSetup();
+  });
+  $('#rec-save').addEventListener('click', () => {
+    let b64 = null; try { b64 = localStorage.getItem('randori.clip'); } catch (e) {}
+    if (!b64) return;
+    const url = URL.createObjectURL(new Blob([fromB64(b64)], { type: 'audio/wav' }));
+    const a = document.createElement('a'); a.href = url; a.download = 'ready.wav';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  });
+  renderVoices();
+}
+
+function buildRows() {
+  buildSteppers(); buildPicks(); buildSwatches(); buildVoice();
   nameInput.addEventListener('input', () => { cfg.name = nameInput.value; renderPresets(); saveCfg(); });
   nameInput.addEventListener('change', () => { cfg.name = nameInput.value.trim() || 'Randori'; changed(); });
   nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') nameInput.blur(); });
-
   for (const key of ['warnInRest', 'redWarn']) {
     const el = $('#s-' + key);
     el.addEventListener('change', () => { snd[key] = el.checked; changed(); });
@@ -1383,105 +1589,8 @@ function buildRows() {
   vol.addEventListener('change', () => playSoundNow('pip'));
 }
 
-/* Voice panel */
-function renderVoices() {
-  const sel = document.getElementById('s-voiceName');
-  if (!sel) return;
-  const keep = snd.voiceName;
-  sel.innerHTML = '<option value="">Automatic</option>' +
-    voices.map(v => `<option value="${v.name.replace(/"/g, '&quot;')}">${v.name.replace(/</g, '&lt;')}</option>`).join('');
-  sel.value = voices.some(v => v.name === keep) ? keep : '';
-}
-function buildVoice() {
-  const on = $('#s-voiceOn'), text = $('#s-voiceText'), sel = $('#s-voiceName'), test = $('#voice-test');
-  test.innerHTML = ICON.test;
-  if (!TTS) { $('#voice-note').hidden = false; on.disabled = true; }
-  on.addEventListener('change', () => { snd.voiceOn = on.checked; changed(); if (on.checked) speak(snd.voiceText.trim() || 'Ready'); });
-  text.addEventListener('input', () => { snd.voiceText = text.value; saveCfg(); $('#voice-sum').textContent = voiceText(); });
-  text.addEventListener('change', () => { snd.voiceText = text.value.trim(); changed(); });
-  text.addEventListener('keydown', e => { if (e.key === 'Enter') text.blur(); });
-  sel.addEventListener('change', () => { snd.voiceName = sel.value; changed(); speak(snd.voiceText.trim() || 'Ready'); });
-  test.addEventListener('click', () => speak(snd.voiceText.trim() || 'Ready'));
-  renderVoices();
-}
-function voiceText() {
-  if (!TTS) return 'Not available in this browser';
-  const w = snd.voiceText.trim();
-  return snd.voiceOn && w ? `Says “${w}” ${snd.voiceAt} s before each round` : 'Off';
-}
-
-/* Colours panel */
-const palette = $('#palette'), swatchesEl = $('#swatches'), customColor = $('#custom-color');
-let paletteKind = 'work';
-const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const PALETTE_TITLE = { prep: 'Get ready color', work: 'Work color', rest: 'Rest color', warn: 'Final seconds color' };
-
-function setColor(kind, hex) { look[kind] = hex.toUpperCase(); changed(); }
-function renderPaletteSel() {
-  const cur = look[paletteKind];
-  Array.from(swatchesEl.children).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.hex === cur)));
-  customColor.value = cur.toLowerCase();
-}
-function openPalette(kind) {
-  paletteKind = kind;
-  $('#palette-title').textContent = PALETTE_TITLE[kind];
-  renderPaletteSel();
-  if (palette.showModal) palette.showModal(); else palette.setAttribute('open', '');
-}
-function closePalette() { if (palette.close) palette.close(); else palette.removeAttribute('open'); }
-
-function buildColors() {
-  swatchesEl.innerHTML = PALETTE.map(([hex, name]) =>
-    `<button type="button" class="sw" data-hex="${hex}" aria-label="${name}" title="${name}" style="background:${hex};color:${inkOn(hex)}">${CHECK}</button>`).join('');
-  swatchesEl.addEventListener('click', e => {
-    const b = e.target.closest('.sw'); if (!b) return;
-    setColor(paletteKind, b.dataset.hex);
-    closePalette();
-  });
-  customColor.addEventListener('input', () => { setColor(paletteKind, customColor.value); renderPaletteSel(); });
-  $('#palette-done').addEventListener('click', closePalette);
-  palette.addEventListener('click', e => { if (e.target === palette) closePalette(); }); // tap outside
-
-  $$('[data-color]').forEach(row => {
-    const kind = row.dataset.color, hint = row.dataset.hint ? `<span class="hint">${row.dataset.hint}</span>` : '';
-    row.innerHTML = `<span class="lab">${row.dataset.label}${hint}</span>` +
-      `<button type="button" class="tile" aria-label="Change the ${row.dataset.label.toLowerCase()} color"></button>`;
-    row.querySelector('.tile').addEventListener('click', () => openPalette(kind));
-  });
-}
-function renderColors() {
-  $$('[data-color]').forEach(row => {
-    const kind = row.dataset.color, st = phaseStyle(look[kind]), tile = row.querySelector('.tile');
-    tile.style.background = st.bg; tile.style.color = st.fg;
-    tile.innerHTML = PHASE_LABEL[kind] + '<svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-  });
-  $('#look-dots').innerHTML = ['prep', 'work', 'rest', 'warn'].map(k => `<i style="background:${look[k]}"></i>`).join('');
-  const t = themeOf(look);
-  $('#look-sum').textContent = t ? t.name : 'Custom';
-  const themesEl = $('#themes');
-  themesEl.innerHTML = '';
-  for (const th of THEMES) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'chip'; b.textContent = th.name;
-    b.setAttribute('aria-pressed', String(t === th));
-    b.addEventListener('click', () => { look = { prep: th.prep, work: th.work, rest: th.rest, warn: th.warn }; changed(); });
-    themesEl.appendChild(b);
-  }
-  if (!palette.open) return;
-  renderPaletteSel();
-}
-
-function patternText() {
-  const parts = [];
-  if (snd.warnAt > 0 && snd.warnSound !== 'none') parts.push(`${SOUND_NAMES[snd.warnSound].toLowerCase()} at ${snd.warnAt} s`);
-  if (snd.pips > 0) parts.push(`beeps at ${Array.from({ length: snd.pips }, (_, i) => snd.pips - i).join('-')}`);
-  if (snd.endSound !== 'none') parts.push(`${SOUND_NAMES[snd.endSound].toLowerCase()} at the end`);
-  const s = parts.join(', ');
-  return s ? s[0].toUpperCase() + s.slice(1) : 'All warnings off';
-}
-
 function saveCfg() {
-  store.set('cfg', cfg); store.set('snd', snd); store.set('look', look);
+  store.set('cfg', cfg); store.set('snd2', snd); store.set('look', look);
   const p = new URLSearchParams({ n: cfg.name.trim() || 'Randori', r: cfg.rounds, w: cfg.work, b: cfg.rest, p: cfg.prep });
   try { history.replaceState(null, '', location.pathname + location.search + '#' + p.toString()); } catch (e) {}
 }
@@ -1494,18 +1603,17 @@ function renderSetup() {
   }
   if (document.activeElement !== nameInput) nameInput.value = cfg.name;
   $('#h-pips').textContent = snd.pips ? `Beeps at ${Array.from({ length: snd.pips }, (_, i) => snd.pips - i).join(', ')}` : 'No beeps';
-  for (const key of ['warnSound', 'startSound', 'endSound']) $('#s-' + key).value = snd[key];
+  for (const key of ['roundSound', 'warnSound', 'endSound']) $('#s-' + key).value = snd[key];
   $('#s-warnInRest').checked = snd.warnInRest;
   $('#s-redWarn').checked = snd.redWarn;
   $('#s-volume').value = snd.volume;
-  $('#s-voiceOn').checked = snd.voiceOn && !!TTS;
+  $('#s-voiceOn').checked = snd.voiceOn;
   if (document.activeElement !== $('#s-voiceText')) $('#s-voiceText').value = snd.voiceText;
-  $$('.voice-dep').forEach(r => r.classList.toggle('off', !(snd.voiceOn && TTS)));
-  $('#voice-sum').textContent = voiceText();
-  renderColors();
+  $$('.voice-dep').forEach(r => r.classList.toggle('off', !snd.voiceOn));
   $('#total').textContent = fmtTotal(totalSeconds(cfg));
-  $('#pattern').textContent = patternText();
   if (!previewNodes.length) previewBtn.textContent = previewLabel();
+  renderSwatches();
+  renderRec();
   renderPresets();
 }
 
@@ -1523,13 +1631,13 @@ function stopPreview() {
 previewBtn.addEventListener('click', () => {
   if (previewNodes.length) { stopPreview(); return; }
   if (!ensureAudio()) return;
-  const P = previewSpan(), t0 = A.ctx.currentTime + 0.15;
+  const P = previewSpan(), t0 = A.ctx.currentTime + 0.15, end = resolveSound('endSound');
   const add = (name, t) => { if (name && name !== 'none') previewNodes.push(...SOUNDS[name](t0 + t)); };
   if (snd.warnAt > 0) add(snd.warnSound, 0);
   for (let k = snd.pips; k >= 1; k--) if (P - k >= 0 && k !== snd.warnAt) add('pip', P - k);
-  add(snd.endSound, P);
+  add(end, P);
   previewBtn.textContent = 'Stop';
-  previewTimer = setTimeout(stopPreview, (P + (SOUND_TAIL[snd.endSound] || 1.8)) * 1000);
+  previewTimer = setTimeout(stopPreview, (P + (SOUND_TAIL[end] || 1.8)) * 1000);
 });
 
 $('#start').addEventListener('click', () => { stopPreview(); startSession(); });
@@ -1541,14 +1649,13 @@ window.addEventListener('hashchange', () => {
 });
 
 buildRows();
-buildVoice();
-buildColors();
 renderSetup();
 saveCfg();
 show('setup');
+loadClips();
 
 if (DEBUG) {
-  window.__timer = { S, cfg, snd, skip, back, pause, resume, startSession, look: () => look };
+  window.__timer = { S, cfg, snd, skip, back, pause, resume, startSession, look: () => look, processClip, wavBytes, toB64, voices: () => voices };
   // Render one sound offline through the real output chain, for testing
   window.__renderSound = async (name, secs = 8, rate = 44100) => {
     const off = new OfflineAudioContext(1, Math.ceil(secs * rate), rate);
